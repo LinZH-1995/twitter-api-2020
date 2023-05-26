@@ -1,8 +1,27 @@
 const bcrypt = require('bcryptjs')
 const passport = require('passport')
 const LocalStrategy = require('passport-local')
+const JwtStrategy = require('passport-jwt').Strategy
+const ExtractJwt = require('passport-jwt').ExtractJwt
 
 const { User } = require('../models')
+
+const jwtOpts = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.JWT_SECRET
+}
+
+passport.use(new JwtStrategy(jwtOpts, async (jwt_payload, cb) => {
+  try {
+    const user = await User.findByPk(jwt_payload.id, {
+      attributes: { exclude: ['password'] }
+    })
+    if (!user) return cb(null, false, { message: 'JWT驗證失敗！' })
+    return cb(null, user.toJSON())
+  } catch (err) {
+    return cb(err, false)
+  }
+}))
 
 passport.use(new LocalStrategy({ usernameField: 'email', passReqToCallback: true }, async (req, email, password, cb) => {
   try {
@@ -22,7 +41,9 @@ passport.serializeUser((user, cb) => {
 
 passport.deserializeUser(async (id, cb) => {
   try {
-    const user = await User.findByPk(id)
+    const user = await User.findByPk(id, {
+      attributes: { exclude: ['password'] }
+    })
     return cb(null, user.toJSON())
   } catch (err) {
     return cb(err, false)
