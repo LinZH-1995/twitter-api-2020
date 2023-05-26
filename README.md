@@ -18,6 +18,8 @@ ALPHA Camp | 學期 3 | Simple Twitter | 自動化測試檔 (前後分離組)
 * [Connect-Flash](https://github.com/jaredhanson/connect-flash#readme) - version 0.1.1
 * [Passport.js](https://github.com/jaredhanson/passport) - version 0.6.0
 * [Passport-Local](https://github.com/jaredhanson/passport-local) - version 1.0.0
+* [Passport-JWT](https://github.com/mikenicholson/passport-jwt) - version 4.0.1
+* [JsonWebToken](https://github.com/auth0/node-jsonwebtoken) - version 9.0.0
 
 ## Getting Started
 ### Install - Use Terminal
@@ -40,6 +42,9 @@ create database ac_twitter_workspace;
 ```
 ```
 npx sequelize db:migrate
+```
+```
+npx sequelize db:seed:all
 ```
 #### 5. Run the project
 ```
