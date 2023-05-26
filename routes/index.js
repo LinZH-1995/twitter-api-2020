@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const admin = require('./modules/admin.js')
+const users = require('./modules/users.js')
 
 const userController = require('../controllers/user-controller.js')
 
@@ -16,6 +17,8 @@ router.post('/signup', userController.signUp)
 router.post('/signin', localStrategyAuth, userController.signIn)
 
 router.use('/admin', jwtStrategyAuth, admin)
+
+router.use('/users', jwtStrategyAuth, users)
 
 router.use(errorHandler)
 
