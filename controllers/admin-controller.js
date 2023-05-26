@@ -53,8 +53,8 @@ const adminController = {
       ])
       if (!tweet) throw new Error('tweet不存在！')
       const deletedTweet = await tweet.destroy()
-      const deletedReplies = await Promise.all(Array.from({ length: replies.length }, (e, i) => replies[i].destroy()))
-      const deletedLikes = await Promise.all(Array.from({ length: likes.length }, (e, i) => likes[i].destroy()))
+      const deletedReplies = await Promise.all(replies.map(reply => reply.destroy()))
+      const deletedLikes = await Promise.all(likes.map(like => like.destroy()))
       return res.json({ status: 'success', data: { deletedTweet, deletedReplies, deletedLikes } })
     } catch (err) {
       next(err)
