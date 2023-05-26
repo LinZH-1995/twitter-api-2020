@@ -30,5 +30,11 @@ module.exports = {
       req.user = user
       next()
     })(req, res, next)
+  },
+
+  jwtStrategyAdminAuth: (req, res, next) => {
+    const user = req.user
+    if (user && user.role === 'admin') return next()
+    return res.status(401).json({ status: 'error', message: '一般使用者禁止使用後台！' })
   }
 }

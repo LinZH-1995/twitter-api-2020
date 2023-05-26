@@ -45,6 +45,7 @@ const userController = {
       const { avatar, coverImage } = req.files
       const data = {
         name: req.body.name?.trim(),
+        introduction: req.body.introduction?.trim() || null,
         account: req.body.account?.trim(),
         email: req.body.email?.trim(),
         password: req.body.password?.trim(),
