@@ -10,7 +10,7 @@ const userController = {
     try {
       if (req.body.password !== req.body.checkPassword) throw new Error('密碼與確認密碼不相符！')
       const { account, name, email, password } = req.body
-      if (!account || !name || !email || !password) throw new Error('所有欄位皆為必填！')
+      if (!account.trim() || !name.trim() || !email.trim() || !password.trim()) throw new Error('所有欄位皆為必填！')
       const user = await User.findOne({ where: { [or]: [{ email }, { account }] } })
       if (user) throw new Error('account或email已存在！')
       const hashPassword = await bcrypt.hash(password, 10)
