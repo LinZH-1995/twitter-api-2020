@@ -19,7 +19,7 @@ const tweetController = {
         ],
         group: ['id']
       })
-      const tweetsData = tweets.rows.map(tweet => Object.assign(tweet.toJSON(), { description: tweet.description.slice(0, 140) }))
+      const tweetsData = tweets.rows.map(tweet => Object.assign(tweet, { description: tweet.description.slice(0, 140) }))
       return res.json({ status: 'success', data: { tweetsCount: tweets.count.length, tweets: tweetsData } })
     } catch (err) {
       next(err)
@@ -31,7 +31,6 @@ const tweetController = {
       const id = req.params.id
       const [tweet, replies] = await Promise.all([
         Tweet.findOne({
-          raw: true,
           nest: true,
           where: { id },
           include: [
@@ -41,7 +40,13 @@ const tweetController = {
           attributes: { include: [[Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('LikedUsers.Like.id'))), 'LikedUsersCounts']] },
           group: ['id']
         }),
-        Reply.findAndCountAll({ where: { tweetId: id }, include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }] })
+        Reply.findAndCountAll({
+          nest: true,
+          distinct: true,
+          where: { tweetId: id },
+          include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }],
+          order: [['createdAt', 'DESC']]
+        })
       ])
       return res.json({ status: 'success', data: { tweet, replies } })
     } catch (err) {

@@ -12,7 +12,7 @@ describe('# user requests', () => {
 
   context('# POST ', () => {
 
-    describe('POST /api/users', () => {
+    describe('POST /api/signup', () => {
       before(async() => {
         // 清除測試資料庫資料
         await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, { raw: true });
@@ -20,10 +20,10 @@ describe('# user requests', () => {
         await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, { raw: true });
       })
 
-      // 註冊自己的帳號 POST /users
+      // 註冊自己的帳號 POST /signup
       it(' - successfully', (done) => {
         request(app)
-          .post('/api/users')
+          .post('/api/signup')
           .send('account=User1&name=User1&email=User1@example.com&password=User1&checkPassword=User1')
           .set('Accept', 'application/json')
           .expect(200)
@@ -233,7 +233,7 @@ describe('# user requests', () => {
             if (err) return done(err);
             expect(res.body).to.be.an('array');
             // 檢查回傳資料是否有 TweetId = 1
-            res.body[0].TweetId.should.equal(1);
+            res.body[0].tweetId.should.equal(1);
 
             return done();
           })

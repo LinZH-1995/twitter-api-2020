@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken')
 
 const { imgurFileHelper } = require('../helpers/imagefile-helper.js')
 
-const { User, Sequelize } = require('../models')
+const { User, Sequelize, Tweet, Reply, Like } = require('../models')
 
 const { or } = Sequelize.Op
 
@@ -43,7 +43,6 @@ const userController = {
       const id = req.params.id
       if (req.user.id.toString() !== id) throw new Error('無法編輯他人資料！')
       const { avatar, coverImage } = req.files || {}
-      console.log(avatar, '======', coverImage)
       const data = {
         name: req.body.name?.trim(),
         introduction: req.body.introduction?.trim() || null,
@@ -53,7 +52,7 @@ const userController = {
         newPassword: req.body.newPassword?.trim(),
         checkNewPassword: req.body.checkNewPassword?.trim()
       }
-      const [avatarLink, coverImageLink] = await Promise.all([imgurFileHelper(avatar),imgurFileHelper(coverImage)])
+      const [avatarLink, coverImageLink] = await Promise.all([imgurFileHelper(avatar), imgurFileHelper(coverImage)])
       const [user, editUser] = await Promise.all([
         User.findOne({ where: { [or]: [{ email: data.email || null }, { account: data.account || null }] } }),
         User.findByPk(id)
@@ -77,7 +76,91 @@ const userController = {
     } catch (err) {
       next(err)
     }
-  }
+  },
+
+  getUser: async (req, res, next) => {
+    try {
+      const id = req.params.id
+      const user = await User.findByPk(id, {
+        nest: true,
+        include: [
+          { model: User, as: 'Followings', attributes: [], through: { attributes: [] } },
+          { model: User, as: 'Followers', attributes: [], through: { attributes: [] } }
+        ],
+        attributes: {
+          exclude: ['email', 'password'],
+          include: [
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Followings.id'))), 'FollowingsCounts'],
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Followers.id'))), 'FollowersCounts']
+          ]
+        },
+        group: ['id']
+      })
+      return res.json({ status: 'success', data: { user } })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  getUserTweets: async (req, res, next) => {
+    try {
+      const id = req.params.id
+      const [user, userTweets] = await Promise.all([
+        User.findByPk(id, { attributes: ['id', 'name', 'account', 'avatar'] }),
+        Tweet.findAll({
+          nest: true,
+          where: { userId: id },
+          order: [['createdAt', 'DESC']],
+          include: [
+            { model: Reply, attributes: [] },
+            { model: User, as: 'LikedUsers', attributes: [], through: { attributes: [] } }
+          ],
+          attributes: [
+            'id', 'description', 'createdAt', 'updatedAt',
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Replies.id'))), 'RepliesCounts'],
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('LikedUsers.Like.id'))), 'LikedUsersCounts']
+          ],
+          group: ['id']
+        })
+      ])
+      const userTweetsData = userTweets.map(tweet => Object.assign(tweet, { description: tweet.description.slice(0, 100) }))
+      return res.json({ status: 'success', data: { user, userTweets: userTweetsData } })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  getUserRepliesTweets: async (req, res, next) => {
+    try {
+      const id = req.params.id
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  getUserLikes: async (req, res, next) => {
+    try {
+      const id = req.params.id
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  getUserFollowings: async (req, res, next) => {
+    try {
+      const id = req.params.id
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  getUserFollowers: async (req, res, next) => {
+    try {
+      const id = req.params.id
+    } catch (err) {
+      next(err)
+    }
+  },
 }
 
 module.exports = userController
