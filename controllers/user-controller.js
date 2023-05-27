@@ -130,9 +130,30 @@ const userController = {
     }
   },
 
-  getUserRepliesTweets: async (req, res, next) => {
+  getUserRepliedTweets: async (req, res, next) => {
     try {
       const id = req.params.id
+      const [user, userRepliedTweets] = await Promise.all([
+        User.findByPk(id, { attributes: ['id', 'name', 'account', 'avatar'] }),
+        Reply.findAll({
+          nest: true,
+          where: { userId: id },
+          order: [['createdAt', 'DESC']],
+          include: [
+            { model: Tweet, include: [
+              { model: Reply, attributes: [] },
+              { model: User, as: 'LikedUsers', attributes: [], through: { attributes: [] } }
+            ] }
+          ],
+          attributes: [
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Tweet.Replies.id'))), 'RepliesCounts'],
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Tweet.LikedUsers.Like.id'))), 'LikedUsersCounts']
+          ],
+          group: ['id']
+        })
+      ])
+      userRepliedTweets.forEach(data => data.Tweet.description = data.Tweet.description.slice(0, 100))
+      return res.json({ status: 'success', data: { user, userRepliedTweets } })
     } catch (err) {
       next(err)
     }

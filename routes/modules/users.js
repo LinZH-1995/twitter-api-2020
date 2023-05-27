@@ -7,7 +7,7 @@ const upload = require('../../helpers/multer-helper.js')
 
 router.get('/:id/tweets', userController.getUserTweets)
 
-router.get('/:id/replied_tweets', userController.getUserRepliesTweets)
+router.get('/:id/replied_tweets', userController.getUserRepliedTweets)
 
 router.get('/:id/likes', userController.getUserLikes)
 
