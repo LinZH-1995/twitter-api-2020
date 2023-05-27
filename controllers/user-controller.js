@@ -42,7 +42,8 @@ const userController = {
     try {
       const id = req.params.id
       if (req.user.id.toString() !== id) throw new Error('無法編輯他人資料！')
-      const { avatar, coverImage } = req.files
+      const { avatar, coverImage } = req.files || {}
+      console.log(avatar, '======', coverImage)
       const data = {
         name: req.body.name?.trim(),
         introduction: req.body.introduction?.trim() || null,
