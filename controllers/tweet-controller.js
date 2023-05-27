@@ -37,13 +37,28 @@ const tweetController = {
           include: [
             { model: User, attributes: ['id', 'name', 'account', 'avatar'] },
             { model: User, as: 'LikedUsers', attributes: [], through: { attributes: [] } }
-        ],
+          ],
           attributes: { include: [[Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('LikedUsers.Like.id'))), 'LikedUsersCounts']] },
           group: ['id']
         }),
         Reply.findAndCountAll({ where: { tweetId: id }, include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }] })
       ])
       return res.json({ status: 'success', data: { tweet, replies } })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  postTweet: async (req, res, next) => {
+    try {
+      const description = req.body.description?.trim()
+      const userId = req.user.id
+      if (!description || description.length > 140) {
+        res.redirect('back')
+        return res.json({ status: 'error', message: '推文字數限制在 140 以內，且不能為空白！' })
+      }
+      const createdTweet = await Tweet.create({ description, userId })
+      return res.json({ status: 'success', data: { createdTweet } })
     } catch (err) {
       next(err)
     }
