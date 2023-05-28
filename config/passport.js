@@ -4,7 +4,7 @@ const LocalStrategy = require('passport-local')
 const JwtStrategy = require('passport-jwt').Strategy
 const ExtractJwt = require('passport-jwt').ExtractJwt
 
-const { User } = require('../models')
+const { User, Tweet } = require('../models')
 
 const jwtOpts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -14,7 +14,13 @@ const jwtOpts = {
 passport.use(new JwtStrategy(jwtOpts, async (jwt_payload, cb) => {
   try {
     const user = await User.findByPk(jwt_payload.id, {
-      attributes: { exclude: ['password'] }
+      nest: true,
+      attributes: { exclude: ['email', 'password'] },
+      include: [
+        { model: User, as: 'Followings', attributes: ['id', 'name', 'account'], through: { attributes: [] } },
+        { model: User, as: 'Followers', attributes: ['id', 'name', 'account'], through: { attributes: [] } },
+        { model: Tweet, as: 'LikedTweets', attributes: ['id'], through: { attributes: [] } }
+      ]
     })
     if (!user) return cb(null, false, { message: 'JWT驗證失敗！' })
     return cb(null, user.toJSON())

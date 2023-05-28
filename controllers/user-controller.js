@@ -96,7 +96,8 @@ const userController = {
         },
         group: ['id']
       })
-      return res.json({ status: 'success', data: { user } })
+      const isFollowing = req.user.Followings.some(following => following.id === user.id)
+      return res.json({ status: 'success', data: { user, isFollowing } })
     } catch (err) {
       next(err)
     }
@@ -123,7 +124,10 @@ const userController = {
           group: ['id']
         })
       ])
-      const userTweetsData = userTweets.map(tweet => Object.assign(tweet, { description: tweet.description.slice(0, 100) }))
+      const userTweetsData = userTweets.map(tweet => {
+        const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
+        return Object.assign(tweet.toJSON(), { description: tweet.description.slice(0, 100), isLiked })
+      })
       return res.json({ status: 'success', data: { user, userTweets: userTweetsData } })
     } catch (err) {
       next(err)
@@ -152,8 +156,13 @@ const userController = {
           group: ['id']
         })
       ])
-      userRepliedTweets.forEach(data => data.Tweet.description = data.Tweet.description.slice(0, 100))
-      return res.json({ status: 'success', data: { user, userRepliedTweets } })
+      const userRepliedTweetsData = userRepliedTweets.map(repliedTweet => {
+        const data = repliedTweet.toJSON()
+        const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === data.Tweet.id)
+        data.Tweet.description = data.Tweet.description.slice(0, 100)
+        return Object.assign(data, { isLiked })
+      })
+      return res.json({ status: 'success', data: { user, userRepliedTweets: userRepliedTweetsData } })
     } catch (err) {
       next(err)
     }
@@ -162,6 +171,18 @@ const userController = {
   getUserLikes: async (req, res, next) => {
     try {
       const id = req.params.id
+      const user = await User.findByPk(id, {
+        nest: true,
+        attributes: ['id', 'name', 'account', 'avatar'],
+        include: [{ model: Tweet, as: 'LikedTweets', through: { attributes: ['createdAt'] } }],
+        order: [[{ model: Tweet, as: 'LikedTweets' }, Like, 'createdAt', 'DESC']]
+      })
+      const userLikesData = user.LikedTweets.map(likedTweet => {
+        const isLiked = req.user.LikedTweets.some(myLikedTweet => myLikedTweet.id === likedTweet.id)
+        return Object.assign(likedTweet.toJSON(), { description: likedTweet.description.slice(0, 100), isLiked })
+      })
+      const userData = Object.assign(user.toJSON(), { LikedTweets: userLikesData })
+      return res.json({ status: 'success', data: { user: userData } })
     } catch (err) {
       next(err)
     }

@@ -43,7 +43,7 @@ describe('# tweet requests', () => {
             // 檢查是否有回傳正確資料
             db.Tweet.findByPk(1).then(tweet => {
               tweet.description.should.equal('description');
-              tweet.UserId.should.equal(1);
+              tweet.userId.should.equal(1);
               return done();
             })
           })

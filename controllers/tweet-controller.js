@@ -19,7 +19,10 @@ const tweetController = {
         ],
         group: ['id']
       })
-      const tweetsData = tweets.rows.map(tweet => Object.assign(tweet, { description: tweet.description.slice(0, 140) }))
+      const tweetsData = tweets.rows.map(tweet => {
+        const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
+        return Object.assign(tweet.toJSON(), { description: tweet.description.slice(0, 140), isLiked })
+      })
       return res.json({ status: 'success', data: { tweetsCount: tweets.count.length, tweets: tweetsData } })
     } catch (err) {
       next(err)
@@ -48,7 +51,8 @@ const tweetController = {
           order: [['createdAt', 'DESC']]
         })
       ])
-      return res.json({ status: 'success', data: { tweet, replies } })
+      const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
+      return res.json({ status: 'success', data: { tweet, replies, isLiked } })
     } catch (err) {
       next(err)
     }
