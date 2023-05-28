@@ -32,27 +32,24 @@ const tweetController = {
   getTweet: async (req, res, next) => {
     try {
       const id = req.params.id
-      const [tweet, replies] = await Promise.all([
-        Tweet.findOne({
+      const tweet = await Tweet.findOne({
           nest: true,
           where: { id },
           include: [
             { model: User, attributes: ['id', 'name', 'account', 'avatar'] },
+            { model: Reply, attributes: [] },
             { model: User, as: 'LikedUsers', attributes: [], through: { attributes: [] } }
           ],
-          attributes: { include: [[Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('LikedUsers.Like.id'))), 'LikedUsersCounts']] },
+          attributes: {
+            include: [
+              [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('LikedUsers.Like.id'))), 'LikedUsersCounts'],
+              [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Replies.id'))), 'RepliesCounts']
+            ]
+          },
           group: ['id']
-        }),
-        Reply.findAndCountAll({
-          nest: true,
-          distinct: true,
-          where: { tweetId: id },
-          include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }],
-          order: [['createdAt', 'DESC']]
         })
-      ])
       const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
-      return res.json({ status: 'success', data: { tweet, replies, isLiked } })
+      return res.json({ status: 'success', data: { tweet, isLiked } })
     } catch (err) {
       next(err)
     }
@@ -84,6 +81,22 @@ const tweetController = {
       }
       const createdReply = await Reply.create({ userId, tweetId: id, comment })
       return res.json({ status: 'success', data: { createdReply } })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  getTweetReplies: async (req, res, next) => {
+    try {
+      const id = req.params.id
+      const replies = await Reply.findAll({
+        nest: true,
+        where: { tweetId: id },
+        attributes: ['id', 'comment', 'createdAt', 'updatedAt'],
+        include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }],
+        order: [['createdAt', 'DESC']]
+      })
+      return res.json({ status: 'success', data: { replies } })
     } catch (err) {
       next(err)
     }
