@@ -235,6 +235,36 @@ const userController = {
       next(err)
     }
   },
+
+  postFollowing: async (req, res, next) => {
+    try {
+      const followingId = req.params.id
+      const followerId = req.user.id
+      const [following, followingUser] = await Promise.all([
+        Followship.findOne({ where: { followerId, followingId } }),
+        User.findByPk(followingId, { attributes: ['id'] })
+      ])
+      if (following) return res.json({ status: 'success', message: '已追蹤此用戶！' })
+      if (!followingUser) throw new Error('欲追蹤用戶不存在！')
+      const addFollowingUser = await Followship.create({ followerId, followingId })
+      return res.json({ status: 'success', data: { addFollowingUser } })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  deleteFollowing: async (req, res, next) => {
+    try {
+      const followingId = req.params.id
+      const followerId = req.user.id
+      const following = await Followship.findOne({ where: { followerId, followingId } })
+      if (!following) return res.json({ status: 'success', message: '尚未追蹤此用戶！' })
+      const deleteFollowingUser = await following.destroy()
+      return res.json({ status: 'success', data: { deleteFollowingUser } })
+    } catch (err) {
+      next(err)
+    }
+  }
 }
 
 module.exports = userController

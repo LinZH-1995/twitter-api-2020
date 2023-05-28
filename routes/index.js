@@ -4,6 +4,7 @@ const router = express.Router()
 const admin = require('./modules/admin.js')
 const users = require('./modules/users.js')
 const tweets = require('./modules/tweets.js')
+const followships = require('./modules/followships.js')
 
 const userController = require('../controllers/user-controller.js')
 
@@ -22,6 +23,8 @@ router.use('/admin', jwtStrategyAuth, jwtStrategyAdminAuth, admin)
 router.use('/users', jwtStrategyAuth, users)
 
 router.use('/tweets', jwtStrategyAuth, tweets)
+
+router.use('/followships', jwtStrategyAuth, followships)
 
 router.use(errorHandler)
 
