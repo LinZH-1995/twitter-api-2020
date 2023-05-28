@@ -71,6 +71,22 @@ const tweetController = {
     } catch (err) {
       next(err)
     }
+  },
+
+  postReply: async (req, res, next) => {
+    try {
+      const id = req.params.id
+      const userId = req.user.id
+      const comment = req.body.comment?.trim()
+      if (!comment) {
+        res.redirect('back')
+        return res.json({ status: 'error', message: '回覆文字不能為空白！' })
+      }
+      const createdReply = await Reply.create({ userId, tweetId: id, comment })
+      return res.json({ status: 'success', data: { createdReply } })
+    } catch (err) {
+      next(err)
+    }
   }
 }
 

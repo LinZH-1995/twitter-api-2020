@@ -84,12 +84,14 @@ const userController = {
       const user = await User.findByPk(id, {
         nest: true,
         include: [
+          { model: Tweet, attributes: [] },
           { model: User, as: 'Followings', attributes: [], through: { attributes: [] } },
           { model: User, as: 'Followers', attributes: [], through: { attributes: [] } }
         ],
         attributes: {
           exclude: ['email', 'password'],
           include: [
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Tweets.id'))), 'TweetsCounts'],
             [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Followings.id'))), 'FollowingsCounts'],
             [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Followers.id'))), 'FollowersCounts']
           ]
