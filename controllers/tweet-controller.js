@@ -1,4 +1,4 @@
-const { Tweet, Reply, User, Sequelize } = require('../models')
+const { Tweet, Reply, User, Sequelize, Like } = require('../models')
 
 const tweetController = {
   getTweets: async (req, res, next) => {
@@ -33,21 +33,21 @@ const tweetController = {
     try {
       const id = req.params.id
       const tweet = await Tweet.findOne({
-          nest: true,
-          where: { id },
+        nest: true,
+        where: { id },
+        include: [
+          { model: User, attributes: ['id', 'name', 'account', 'avatar'] },
+          { model: Reply, attributes: [] },
+          { model: User, as: 'LikedUsers', attributes: [], through: { attributes: [] } }
+        ],
+        attributes: {
           include: [
-            { model: User, attributes: ['id', 'name', 'account', 'avatar'] },
-            { model: Reply, attributes: [] },
-            { model: User, as: 'LikedUsers', attributes: [], through: { attributes: [] } }
-          ],
-          attributes: {
-            include: [
-              [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('LikedUsers.Like.id'))), 'LikedUsersCounts'],
-              [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Replies.id'))), 'RepliesCounts']
-            ]
-          },
-          group: ['id']
-        })
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('LikedUsers.Like.id'))), 'LikedUsersCounts'],
+            [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Replies.id'))), 'RepliesCounts']
+          ]
+        },
+        group: ['id']
+      })
       const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
       return res.json({ status: 'success', data: { tweet, isLiked } })
     } catch (err) {
@@ -72,14 +72,14 @@ const tweetController = {
 
   postReply: async (req, res, next) => {
     try {
-      const id = req.params.id
+      const tweetId = req.params.id
       const userId = req.user.id
       const comment = req.body.comment?.trim()
       if (!comment) {
         res.redirect('back')
         return res.json({ status: 'error', message: '回覆文字不能為空白！' })
       }
-      const createdReply = await Reply.create({ userId, tweetId: id, comment })
+      const createdReply = await Reply.create({ userId, tweetId, comment })
       return res.json({ status: 'success', data: { createdReply } })
     } catch (err) {
       next(err)
@@ -88,15 +88,45 @@ const tweetController = {
 
   getTweetReplies: async (req, res, next) => {
     try {
-      const id = req.params.id
+      const tweetId = req.params.id
       const replies = await Reply.findAll({
         nest: true,
-        where: { tweetId: id },
+        where: { tweetId },
         attributes: ['id', 'comment', 'createdAt', 'updatedAt'],
         include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }],
         order: [['createdAt', 'DESC']]
       })
       return res.json({ status: 'success', data: { replies } })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  addLike: async (req, res, next) => {
+    try {
+      const tweetId = req.params.id
+      const userId = req.user.id
+      const [like, tweet] = await Promise.all([
+        Like.findOne({ where: { userId, tweetId } }),
+        Tweet.findByPk(id, { attributes: ['id'] })
+      ])
+      if (like) return res.json({ status: 'error', message: '已對此推文按過讚！' })
+      if (!tweet) throw new Error('此貼文不存在！')
+      const likedTweet = await Like.create({ userId, tweetId })
+      return res.json({ status: 'success', data: { likedTweet } })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  deleteLike: async (req, res, next) => {
+    try {
+      const tweetId = req.params.id
+      const userId = req.user.id
+      const like = await Like.findOne({ where: { userId, tweetId } })
+      if (!like) return res.json({ status: 'error', message: '尚未對此推文按過讚！' })
+      const unlikedTweet = await like.destroy()
+      return res.json({ status: 'success', data: { unlikedTweet } })
     } catch (err) {
       next(err)
     }

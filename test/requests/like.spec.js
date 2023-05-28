@@ -44,8 +44,8 @@ describe('# like requests', () => {
             if (err) return done(err);
             // 檢查 Like 資料裡，是否有 UserId=1, TweetId =1 的資料
             db.Like.findByPk(1).then(like => {
-              like.UserId.should.equal(1);
-              like.TweetId.should.equal(1);
+              like.userId.should.equal(1);
+              like.tweetId.should.equal(1);
               return done();
             })
           })
@@ -87,10 +87,10 @@ describe('# like requests', () => {
         await db.Like.create({UserId: 1, TweetId: 1})
       })
 
-      // POST /tweets/:id/unlike 取消喜歡
+      // DELETE /tweets/:id/unlike 取消喜歡
       it(' - successfully', (done) => {
         request(app)
-          .post('/api/tweets/1/unlike')
+          .delete('/api/tweets/1/unlike')
           .set('Accept', 'application/json')
           .expect(200)
           .end(function(err, res) {

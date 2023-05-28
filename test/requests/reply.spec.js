@@ -46,8 +46,8 @@ describe('# reply requests', () => {
             // 檢查是否有成功新增留言
             db.Reply.findByPk(1).then(reply => {
               reply.comment.should.equal('comment');
-              reply.UserId.should.equal(1);
-              reply.TweetId.should.equal(1);
+              reply.userId.should.equal(1);
+              reply.tweetId.should.equal(1);
               return done();
             })
           })

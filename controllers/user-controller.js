@@ -108,12 +108,12 @@ const userController = {
 
   getUserTweets: async (req, res, next) => {
     try {
-      const id = req.params.id
+      const userId = req.params.id
       const [user, userTweets] = await Promise.all([
-        User.findByPk(id, { attributes: ['id', 'name', 'account', 'avatar'] }),
+        User.findByPk(userId, { attributes: ['id', 'name', 'account', 'avatar'] }),
         Tweet.findAll({
           nest: true,
-          where: { userId: id },
+          where: { userId },
           order: [['createdAt', 'DESC']],
           include: [
             { model: Reply, attributes: [] },
@@ -140,12 +140,12 @@ const userController = {
 
   getUserRepliedTweets: async (req, res, next) => {
     try {
-      const id = req.params.id
+      const userId = req.params.id
       const [user, userRepliedTweets] = await Promise.all([
-        User.findByPk(id, { attributes: ['id', 'name', 'account', 'avatar'] }),
+        User.findByPk(userId, { attributes: ['id', 'name', 'account', 'avatar'] }),
         Reply.findAll({
           nest: true,
-          where: { userId: id },
+          where: { userId },
           order: [['createdAt', 'DESC']],
           include: [
             { model: Tweet, include: [

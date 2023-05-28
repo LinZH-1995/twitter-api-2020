@@ -45,11 +45,11 @@ const adminController = {
 
   deleteTweet: async (req, res, next) => {
     try {
-      const id = req.params.id
+      const tweetId = req.params.id
       const [tweet, replies, likes] = await Promise.all([
         Tweet.findByPk(id),
-        Reply.findAll({ where: { tweetId: id } }),
-        Like.findAll({ where: { tweetId: id } })
+        Reply.findAll({ where: { tweetId } }),
+        Like.findAll({ where: { tweetId } })
       ])
       if (!tweet) throw new Error('tweet不存在！')
       const deletedTweet = await tweet.destroy()
