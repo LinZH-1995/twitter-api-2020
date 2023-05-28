@@ -148,10 +148,12 @@ const userController = {
           where: { userId },
           order: [['createdAt', 'DESC']],
           include: [
-            { model: Tweet, include: [
-              { model: Reply, attributes: [] },
-              { model: User, as: 'LikedUsers', attributes: [], through: { attributes: [] } }
-            ] }
+            {
+              model: Tweet, include: [
+                { model: Reply, attributes: [] },
+                { model: User, as: 'LikedUsers', attributes: [], through: { attributes: [] } }
+              ]
+            }
           ],
           attributes: [
             [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Tweet.Replies.id'))), 'RepliesCounts'],
@@ -240,11 +242,12 @@ const userController = {
     try {
       const followingId = req.params.id
       const followerId = req.user.id
+      if (followerId.toString() === followingId) return res.json({ status: 'error', message: '無法追蹤自己！' })
       const [following, followingUser] = await Promise.all([
         Followship.findOne({ where: { followerId, followingId } }),
         User.findByPk(followingId, { attributes: ['id'] })
       ])
-      if (following) return res.json({ status: 'success', message: '已追蹤此用戶！' })
+      if (following) return res.json({ status: 'error', message: '已追蹤此用戶！' })
       if (!followingUser) throw new Error('欲追蹤用戶不存在！')
       const addFollowingUser = await Followship.create({ followerId, followingId })
       return res.json({ status: 'success', data: { addFollowingUser } })
@@ -258,9 +261,29 @@ const userController = {
       const followingId = req.params.id
       const followerId = req.user.id
       const following = await Followship.findOne({ where: { followerId, followingId } })
-      if (!following) return res.json({ status: 'success', message: '尚未追蹤此用戶！' })
+      if (!following) return res.json({ status: 'error', message: '尚未追蹤此用戶！' })
       const deleteFollowingUser = await following.destroy()
       return res.json({ status: 'success', data: { deleteFollowingUser } })
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  getTop10User: async (req, res, next) => {
+    try {
+      const user = await User.findAll({
+        nest: true,
+        include: [{ model: User, as: 'Followers', attributes: [], through: { attributes: [] }, duplicating: false }],
+        attributes: [
+          'id', 'name', 'account', 'avatar',
+          [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('Followers.Followship.id'))), 'followersCounts']
+        ],
+        group: ['id'],
+        order: [['followersCounts', 'DESC']],
+        limit: 10
+      })
+      console.log(user, '====user====', user.length)
+      return res.json({ status: 'success', data: { user } })
     } catch (err) {
       next(err)
     }
@@ -268,3 +291,34 @@ const userController = {
 }
 
 module.exports = userController
+
+
+// getTop10User:
+
+// without { limit } and { include: [{ duplicating: false }] } = works well but not limit for result
+// Executing(default ):
+// SELECT`User`.`id`, `User`.`name`, `User`.`account`, `User`.`avatar`, COUNT(DISTINCT(`Followers->Followship`.`id`)) AS `followersCounts`
+// FROM `Users` AS `User`
+// LEFT OUTER JOIN(`Followships` AS`Followers->Followship` INNER JOIN`Users` AS`Followers` ON`Followers`.`id` = `Followers->Followship`.`follower_id`)
+// ON`User`.`id` = `Followers->Followship`.`following_id`
+// GROUP BY `id`
+// ORDER BY `followersCounts` DESC;
+
+// use { limit } but without { include: [{ duplicating: false }] } = SequelizeDatabaseError: "Unknown column 'Followers->Followship.id' in 'field list'"
+// Executing(default ):
+// SELECT`User`.*
+// FROM(SELECT`User`.`id`, `User`.`name`, `User`.`account`, `User`.`avatar`, COUNT(DISTINCT(`Followers->Followship`.`id`)) AS`followersCounts`
+// FROM`Users` AS`User` GROUP BY`id` ORDER BY`User`.`followersCounts` DESC LIMIT 10) AS `User`
+// LEFT OUTER JOIN(`Followships` AS`Followers->Followship` INNER JOIN`Users` AS`Followers` ON`Followers`.`id` = `Followers->Followship`.`follower_id`)
+// ON`User`.`id` = `Followers->Followship`.`following_id`
+// ORDER BY `followersCounts` DESC;
+
+// use { limit } and { include: [{ duplicating: false }] } = work well with limit for result
+// Executing(default ):
+// SELECT`User`.`id`, `User`.`name`, `User`.`account`, `User`.`avatar`, COUNT(DISTINCT(`Followers->Followship`.`id`)) AS `followersCounts`
+// FROM `Users` AS `User` 
+// LEFT OUTER JOIN(`Followships` AS`Followers->Followship` INNER JOIN`Users` AS`Followers` ON`Followers`.`id` = `Followers->Followship`.`follower_id`)
+// ON`User`.`id` = `Followers->Followship`.`following_id`
+// GROUP BY `id`
+// ORDER BY `followersCounts` DESC
+// LIMIT 10;

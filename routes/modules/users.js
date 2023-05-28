@@ -5,6 +5,8 @@ const userController = require('../../controllers/user-controller.js')
 
 const upload = require('../../helpers/multer-helper.js')
 
+router.get('/getTop10User', userController.getTop10User)
+
 router.get('/:id/tweets', userController.getUserTweets)
 
 router.get('/:id/replied_tweets', userController.getUserRepliedTweets)
