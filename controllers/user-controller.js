@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken')
 
 const { imgurFileHelper } = require('../helpers/imagefile-helper.js')
 
-const { User, Sequelize, Tweet, Reply, Like } = require('../models')
+const { User, Sequelize, Tweet, Reply, Like, Followship } = require('../models')
 
 const { or } = Sequelize.Op
 
@@ -96,6 +96,7 @@ const userController = {
         },
         group: ['id']
       })
+      if (!user) throw new Error('user不存在！')
       const isFollowing = req.user.Followings.some(following => following.id === user.id)
       return res.json({ status: 'success', data: { user, isFollowing } })
     } catch (err) {
@@ -124,6 +125,7 @@ const userController = {
           group: ['id']
         })
       ])
+      if (!user) throw new Error('user不存在！')
       const userTweetsData = userTweets.map(tweet => {
         const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
         return Object.assign(tweet.toJSON(), { description: tweet.description.slice(0, 100), isLiked })
@@ -156,6 +158,7 @@ const userController = {
           group: ['id']
         })
       ])
+      if (!user) throw new Error('user不存在！')
       const userRepliedTweetsData = userRepliedTweets.map(repliedTweet => {
         const data = repliedTweet.toJSON()
         const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === data.Tweet.id)
@@ -177,6 +180,7 @@ const userController = {
         include: [{ model: Tweet, as: 'LikedTweets', through: { attributes: ['createdAt'] } }],
         order: [[{ model: Tweet, as: 'LikedTweets' }, Like, 'createdAt', 'DESC']]
       })
+      if (!user) throw new Error('user不存在！')
       const userLikesData = user.LikedTweets.map(likedTweet => {
         const isLiked = req.user.LikedTweets.some(myLikedTweet => myLikedTweet.id === likedTweet.id)
         return Object.assign(likedTweet.toJSON(), { description: likedTweet.description.slice(0, 100), isLiked })
@@ -191,6 +195,19 @@ const userController = {
   getUserFollowings: async (req, res, next) => {
     try {
       const id = req.params.id
+      const user = await User.findByPk(id, {
+        nest: true,
+        attributes: ['id', 'name', 'account', 'avatar'],
+        include: [{ model: User, as: 'Followings', attributes: ['id', 'name', 'account', 'avatar'], through: { attributes: ['createdAt'] } }],
+        order: [[{ model: User, as: 'Followings' }, Followship, 'createdAt', 'DESC']]
+      })
+      if (!user) throw new Error('user不存在！')
+      const userFollowingsData = user.Followings.map(following => {
+        const isFollowing = req.user.Followings.some(myFollowing => myFollowing.id === following.id)
+        return Object.assign(following.toJSON(), { isFollowing })
+      })
+      const userData = Object.assign(user.toJSON(), { Followings: userFollowingsData })
+      return res.json({ status: 'success', data: { user: userData } })
     } catch (err) {
       next(err)
     }
@@ -199,6 +216,19 @@ const userController = {
   getUserFollowers: async (req, res, next) => {
     try {
       const id = req.params.id
+      const user = await User.findByPk(id, {
+        nest: true,
+        attributes: ['id', 'name', 'account', 'avatar'],
+        include: [{ model: User, as: 'Followers', attributes: ['id', 'name', 'account', 'avatar'], through: { attributes: ['createdAt'] } }],
+        order: [[{ model: User, as: 'Followers' }, Followship, 'createdAt', 'DESC']]
+      })
+      if (!user) throw new Error('user不存在！')
+      const userFollowersData = user.Followers.map(follower => {
+        const isFollowing = req.user.Followings.some(myFollowing => myFollowing.id === follower.id)
+        return Object.assign(follower.toJSON(), { isFollowing })
+      })
+      const userData = Object.assign(user.toJSON(), { Followers: userFollowersData })
+      return res.json({ status: 'success', data: { user: userData } })
     } catch (err) {
       next(err)
     }
