@@ -271,7 +271,7 @@ const userController = {
 
   getTop10User: async (req, res, next) => {
     try {
-      const user = await User.findAll({
+      const users = await User.findAll({
         nest: true,
         include: [{ model: User, as: 'Followers', attributes: [], through: { attributes: [] }, duplicating: false }],
         attributes: [
@@ -282,8 +282,11 @@ const userController = {
         order: [['followersCounts', 'DESC']],
         limit: 10
       })
-      console.log(user, '====user====', user.length)
-      return res.json({ status: 'success', data: { user } })
+      const userData = users.map(user => {
+        const isFollowing = req.user.Followings.some(following => following.id === user.id)
+        return Object.assign(user.toJSON(), { isFollowing })
+      })
+      return res.json({ status: 'success', data: { users: userData } })
     } catch (err) {
       next(err)
     }
