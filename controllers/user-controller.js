@@ -55,7 +55,6 @@ const userController = {
       if (data.account) {
         if (data.account[0] !== '@' || data.account.includes(' ') || data.account.length < 2) throw new Error('account格式錯誤！')
       }
-      console.log(data, '=======', req.body, '======', req.files)
       const [avatarLink, coverImageLink] = await Promise.all([imgurFileHelper(avatar), imgurFileHelper(coverImage)])
       const [user, editUser] = await Promise.all([
         User.findOne({ where: { [or]: [{ email: data.email || null }, { account: data.account || null }] } }),
