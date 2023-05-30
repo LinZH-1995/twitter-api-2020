@@ -52,6 +52,9 @@ const userController = {
         newPassword: req.body.newPassword?.trim(),
         checkNewPassword: req.body.checkNewPassword?.trim()
       }
+      if (data.account) {
+        if (data.account[0] !== '@' || data.account.includes(' ') || data.account.length < 2) throw new Error('account格式錯誤！')
+      }
       const [avatarLink, coverImageLink] = await Promise.all([imgurFileHelper(avatar), imgurFileHelper(coverImage)])
       const [user, editUser] = await Promise.all([
         User.findOne({ where: { [or]: [{ email: data.email || null }, { account: data.account || null }] } }),
@@ -67,11 +70,15 @@ const userController = {
         if (!match) throw new Error("舊密碼錯誤！")
         hashPassword = await bcrypt.hash(data.newPassword, 10)
       }
-      const editedUser = await editUser.update(Object.assign(data, {
+      const editedUser = await editUser.update({
+        name: data.name || editUser.name,
+        account: data.account || editUser.account,
+        introduction: data.introduction,
+        email: data.email || editUser.email,
         password: hashPassword || editUser.password,
         avatar: avatarLink || editUser.avatar,
         coverImage: coverImageLink || editUser.coverImage
-      }))
+      })
       return res.json({ status: 'success', data: { editedUser } })
     } catch (err) {
       next(err)

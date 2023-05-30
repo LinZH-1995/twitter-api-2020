@@ -5,7 +5,7 @@ const adminController = {
     try {
       const tweets = await Tweet.findAndCountAll({
         nest: true,
-        include: [{ model: User, attributes: ['id', 'name', 'account'] }],
+        include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }],
         order: [['createdAt', 'DESC']]
       })
       const tweetsData = tweets.rows.map(tweet => {
@@ -45,9 +45,10 @@ const adminController = {
 
   deleteTweet: async (req, res, next) => {
     try {
+      console.log(req.params)
       const tweetId = req.params.id
       const [tweet, replies, likes] = await Promise.all([
-        Tweet.findByPk(id),
+        Tweet.findByPk(tweetId),
         Reply.findAll({ where: { tweetId } }),
         Like.findAll({ where: { tweetId } })
       ])
