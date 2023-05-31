@@ -81,7 +81,7 @@ describe('# user requests', () => {
           .end(function(err, res) {
             if (err) return done(err);
             // 檢查是否回傳資料裡有 root 的資料
-            res.body.name.should.equal('root');
+            res.body.data.user.name.should.equal('root');
 
             return done();
           })
@@ -113,10 +113,10 @@ describe('# user requests', () => {
         });
         this.getUser = sinon.stub(
             helpers, 'getUser'
-        ).returns({id: 1, Followings: [], role: 'user'});
+        ).returns({ id: 1, Followings: [], LikedTweets: [], role: 'user'});
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})
-        await db.Tweet.create({UserId: 1, description: 'User1 的 Tweet1'})
+        await db.Tweet.create({userId: 1, description: 'User1 的 Tweet1'})
       })
 
       // GET /users/:id/tweets - 看見某使用者發過的推文
@@ -128,9 +128,9 @@ describe('# user requests', () => {
           .end(function(err, res) {
             if (err) return done(err);
 
-            expect(res.body).to.be.an('array');
+            expect(res.body).to.be.an('object');
             // 有回傳某使用者的推文資料
-            res.body[0].description.should.equal('User1 的 Tweet1');
+            res.body.data.userTweets[0].description.should.equal('User1 的 Tweet1');
 
             return done();
           })
@@ -163,11 +163,11 @@ describe('# user requests', () => {
         });
         this.getUser = sinon.stub(
             helpers, 'getUser'
-        ).returns({id: 1, Followings: [], role: 'user'});
+        ).returns({ id: 1, Followings: [], LikedTweets: [], role: 'user'});
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})        
-        await db.Tweet.create({UserId: 1, description: 'User1 的 Tweet1'})
-        await db.Reply.create({UserId: 1, TweetId: 1, comment: 'Tweet1 的 comment'})
+        await db.Tweet.create({userId: 1, description: 'User1 的 Tweet1'})
+        await db.Reply.create({userId: 1, tweetId: 1, comment: 'Tweet1 的 comment'})
       })
 
       // GET /users/:id/replied_tweets - 看見某使用者發過回覆的推文
@@ -179,9 +179,9 @@ describe('# user requests', () => {
           .end(function(err, res) {
             if (err) return done(err);
 
-            expect(res.body).to.be.an('array');
+            expect(res.body).to.be.an('object');
             // 有回傳 Tweet1 的 comment 這筆資料
-            res.body[0].comment.should.equal('Tweet1 的 comment');
+            res.body.data.userRepliedTweets[0].comment.should.equal('Tweet1 的 comment');
 
             return done();
           })
@@ -215,12 +215,12 @@ describe('# user requests', () => {
         });
         this.getUser = sinon.stub(
             helpers, 'getUser'
-        ).returns({id: 1, Followings: [], role: 'user'});
+        ).returns({ id: 1, Followings: [], LikedTweets: [], role: 'user'});
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})        
         await db.User.create({account: 'User2', name: 'User2', email: 'User2', password: 'User2'})        
-        await db.Tweet.create({UserId: 2, description: 'User2 的 Tweet1'})
-        await db.Like.create({UserId: 1, TweetId: 1})
+        await db.Tweet.create({userId: 2, description: 'User2 的 Tweet1'})
+        await db.Like.create({userId: 1, tweetId: 1})
       })
 
       // GET /users/:id/likes - 看見某使用者點過的 Like 
@@ -231,9 +231,9 @@ describe('# user requests', () => {
           .expect(200)
           .end(function(err, res) {
             if (err) return done(err);
-            expect(res.body).to.be.an('array');
+            expect(res.body).to.be.an('object');
             // 檢查回傳資料是否有 TweetId = 1
-            res.body[0].tweetId.should.equal(1);
+            res.body.data.user.LikedTweets[0].Like.tweetId.should.equal(1);
 
             return done();
           })
@@ -283,9 +283,9 @@ describe('# user requests', () => {
           .end(function(err, res) {
             if (err) return done(err);
 
-            expect(res.body).to.be.an('array');
+            expect(res.body).to.be.an('object');
             //回傳資料中是否有跟隨中的人的 id = 2
-            res.body[0].followingId.should.equal(2);
+            res.body.data.user.Followings[0].Followship.followingId.should.equal(2);
 
             return done();
           })
@@ -335,9 +335,9 @@ describe('# user requests', () => {
           .end(function(err, res) {
             if (err) return done(err);
 
-            expect(res.body).to.be.an('array');
+            expect(res.body).to.be.an('object');
             // 有跟隨者的 followerId = 1
-            res.body[0].followerId.should.equal(1);
+            res.body.data.user.Followers[0].Followship.followerId.should.equal(1);
 
             return done();
           })

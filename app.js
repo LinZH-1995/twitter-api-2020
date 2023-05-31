@@ -37,6 +37,9 @@ const passport = require('./config/passport.js')
 
 const app = express()
 const port = process.env.PORT || 3000
+const httpServer = require('http').createServer(app)
+const { Server } = require('socket.io')
+const io = new Server(httpServer, { /* options */ })
 
 app.use(express.urlencoded({ extended: true }))
 app.use(methodOverride('_method'))
@@ -66,6 +69,24 @@ app.get('/swagger/json', (req, res) => {
 
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/ws.html')
+})
+io.on('connection', (socket) => {
+  console.log('a user connected')
+  console.log('socketId:', socket.id)
+  socket.on('disconnect', () => {
+    console.log('a user disconnected')
+    console.log('socketId:', socket.id)
+  })
+
+  socket.on('message', (msg) => {
+    io.emit(msg)
+  })
+})
+
 app.listen(port, () => console.info(`Example app listening on port ${port}!`))
+
+httpServer.listen(3001)
 
 module.exports = app

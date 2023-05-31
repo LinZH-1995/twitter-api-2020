@@ -1,4 +1,5 @@
 const { Tweet, Reply, User, Sequelize, Like } = require('../models')
+const helpers = require('../_helpers')
 
 const tweetController = {
   getTweets: async (req, res, next) => {
@@ -20,7 +21,7 @@ const tweetController = {
         group: ['id']
       })
       const tweetsData = tweets.rows.map(tweet => {
-        const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
+        const isLiked = helpers.getUser(req).LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
         return Object.assign(tweet.toJSON(), { description: tweet.description.slice(0, 140), isLiked })
       })
       return res.json({ status: 'success', data: { tweetsCount: tweets.count.length, tweets: tweetsData } })
@@ -48,7 +49,7 @@ const tweetController = {
         },
         group: ['id']
       })
-      const isLiked = req.user.LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
+      const isLiked = helpers.getUser(req).LikedTweets.some(likedTweet => likedTweet.id === tweet.id)
       return res.json({ status: 'success', data: { tweet, isLiked } })
     } catch (err) {
       next(err)
@@ -58,7 +59,7 @@ const tweetController = {
   postTweet: async (req, res, next) => {
     try {
       const description = req.body.description?.trim()
-      const userId = req.user.id
+      const userId = helpers.getUser(req).id
       if (!description || description.length > 140) {
         res.redirect('back')
         return res.json({ status: 'error', message: '推文字數限制在 140 以內，且不能為空白！' })
@@ -73,7 +74,7 @@ const tweetController = {
   postReply: async (req, res, next) => {
     try {
       const tweetId = req.params.id
-      const userId = req.user.id
+      const userId = helpers.getUser(req).id
       const comment = req.body.comment?.trim()
       if (!comment) {
         res.redirect('back')
@@ -105,10 +106,10 @@ const tweetController = {
   addLike: async (req, res, next) => {
     try {
       const tweetId = req.params.id
-      const userId = req.user.id
+      const userId = helpers.getUser(req).id
       const [like, tweet] = await Promise.all([
         Like.findOne({ where: { userId, tweetId } }),
-        Tweet.findByPk(id, { attributes: ['id'] })
+        Tweet.findByPk(tweetId, { attributes: ['id'] })
       ])
       if (like) return res.json({ status: 'error', message: '已對此推文按過讚！' })
       if (!tweet) throw new Error('此貼文不存在！')
@@ -122,7 +123,7 @@ const tweetController = {
   deleteLike: async (req, res, next) => {
     try {
       const tweetId = req.params.id
-      const userId = req.user.id
+      const userId = helpers.getUser(req).id
       const like = await Like.findOne({ where: { userId, tweetId } })
       if (!like) return res.json({ status: 'error', message: '尚未對此推文按過讚！' })
       const unlikedTweet = await like.destroy()

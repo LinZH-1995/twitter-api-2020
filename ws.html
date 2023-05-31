@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>websocket</h1>
+    <button id="btn">click</button>
+    <button id="enterRoom">enter room</button>
+    <button id="send">send</button>
+
+    <script type="module">
+      import { io } from "https://cdn.socket.io/4.3.2/socket.io.esm.min.js";
+      const socket = io("http://localhost:3001");
+
+      // user info
+      const userId = Math.floor(Math.random() * 100);
+      console.log("userId", userId);
+
+      socket.on("connect", () => {
+        console.log("connect", socket.id);
+      });
+      socket.on("disconnect", () => {
+        console.log("disconnect", socket.id); // undefined
+      });
+      socket.on("message", (data) => {
+        console.log("receive message", data);
+      });
+
+      // listener
+      const btn = document.getElementById("btn");
+      btn.addEventListener("click", () => {
+        socket.emit("test1", { roomid: "room1" });
+      });
+
+      const enterRoombtn = document.getElementById("enterRoom");
+      enterRoombtn.addEventListener("click", () => {
+        socket.emit("enterPrivateRoom", { rooms: ["room1", "room2", "room3"] });
+      });
+
+      const sendMsgBtn = document.getElementById("send");
+      sendMsgBtn.addEventListener("click", () => {
+        socket.emit("message", {
+          chatRoomId: "room1",
+          senderId: userId,
+          message: `msg from ${userId}`,
+        });
+      });
+    </script>
+  </body>
+</html>
