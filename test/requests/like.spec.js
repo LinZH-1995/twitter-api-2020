@@ -31,7 +31,7 @@ describe('# like requests', () => {
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})
         await db.User.create({account: 'User2', name: 'User2', email: 'User2', password: 'User2'})
-        await db.Tweet.create({UserId: 2, description: 'User2 的 Tweet1'})
+        await db.Tweet.create({userId: 2, description: 'User2 的 Tweet1'})
       })
 
       // POST /tweets/:id/like  喜歡一則推文
@@ -83,8 +83,8 @@ describe('# like requests', () => {
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})
         await db.User.create({account: 'User2', name: 'User2', email: 'User2', password: 'User2'})
-        await db.Tweet.create({UserId: 2, description: 'User2 的 Tweet1'})
-        await db.Like.create({UserId: 1, TweetId: 1})
+        await db.Tweet.create({userId: 2, description: 'User2 的 Tweet1'})
+        await db.Like.create({userId: 1, tweetId: 1})
       })
 
       // DELETE /tweets/:id/unlike 取消喜歡

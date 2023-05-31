@@ -45,7 +45,6 @@ const adminController = {
 
   deleteTweet: async (req, res, next) => {
     try {
-      console.log(req.params)
       const tweetId = req.params.id
       const [tweet, replies, likes] = await Promise.all([
         Tweet.findByPk(tweetId),

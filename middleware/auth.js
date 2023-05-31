@@ -1,4 +1,5 @@
 const passport = require('../config/passport.js')
+const helpers = require('../_helpers.js')
 
 module.exports = {
   localStrategyAuth: (req, res, next) => {
@@ -33,7 +34,7 @@ module.exports = {
   },
 
   jwtStrategyAdminAuth: (req, res, next) => {
-    const user = req.user
+    const user = helpers.getUser(req)
     if (user && user.role === 'admin') return next()
     return res.status(401).json({ status: 'error', message: '一般使用者禁止使用後台！' })
   }

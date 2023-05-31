@@ -31,7 +31,7 @@ describe('# reply requests', () => {
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})
         await db.User.create({account: 'User2', name: 'User2', email: 'User2', password: 'User2'})
-        await db.Tweet.create({UserId: 2, description: 'User2 的 Tweet1'})
+        await db.Tweet.create({userId: 2, description: 'User2 的 Tweet1'})
       })
 
       // 新增回覆 POST /tweets/:tweet_id/replies
@@ -88,8 +88,8 @@ describe('# reply requests', () => {
         ).returns({id: 1, Followings: [], role: 'user'});
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})
-        await db.Tweet.create({UserId: 1, description: 'User1 的 Tweet1'})
-        await db.Reply.create({UserId: 1, TweetId: 1, comment: 'Tweet1 的 comment'})
+        await db.Tweet.create({userId: 1, description: 'User1 的 Tweet1'})
+        await db.Reply.create({userId: 1, tweetId: 1, comment: 'Tweet1 的 comment'})
       })
 
       // 瀏覽 GET /tweets/:tweet_id/replies
@@ -101,8 +101,8 @@ describe('# reply requests', () => {
           .end(function(err, res) {
             if (err) return done(err);
             // 檢查是否有成功取得留言
-            expect(res.body).to.be.an('array');
-            res.body[0].comment.should.equal('Tweet1 的 comment');
+            expect(res.body).to.be.an('object');
+            res.body.data.replies[0].comment.should.equal('Tweet1 的 comment');
             return done();
           })
       });
