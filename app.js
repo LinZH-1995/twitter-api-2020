@@ -18,7 +18,7 @@ const jsDocOptions = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT'
-        }          
+        }
       }
     }
   },
@@ -75,13 +75,28 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('a user connected')
   console.log('socketId:', socket.id)
+  console.log('socketRoom:', socket.rooms)
   socket.on('disconnect', () => {
     console.log('a user disconnected')
     console.log('socketId:', socket.id)
   })
 
-  socket.on('message', (msg) => {
-    io.emit(msg)
+  socket.on('test1', (data) => {
+    console.log(data)
+  })
+
+  socket.on('enterPrivateRoom', (roomData) => {
+    const room = roomData.rooms[Math.floor(Math.random() * 3)]
+    if (socket.rooms.size === 1) {
+      socket.emit('message', `Join Room: ${room}`)
+      return socket.join(room)
+    }
+    console.log(roomData, room, socket.rooms)
+  })
+
+  socket.on('message', (msgData) => {
+    console.log(msgData, socket.rooms)
+    io.to(msgData.chatRoomId).emit('message', msgData.message)
   })
 })
 
