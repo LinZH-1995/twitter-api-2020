@@ -23,6 +23,8 @@ ALPHA Camp | 學期 3 | Simple Twitter | 自動化測試檔 (前後分離組)
 * [Imgur](https://github.com/keneucker/imgur) - version 2.3.0
 * [Multer](https://github.com/expressjs/multer#readme) - version 1.4.5
 * [tslib](https://github.com/Microsoft/tslib) - version 2.5.2
+* [swagger-ui-express](https://www.npmjs.com/package/swagger-ui-express) - version 4.6.3
+* [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc) - version 6.2.8
 
 ## Getting Started
 ### Install - Use Terminal
@@ -56,8 +58,14 @@ npm run start   // Node
 ```
 npm run dev   // Nodemon
 ```
-#### 6. Connect - [localhost](http://localhost:3000/)
+#### 6. Connect - [localhost](http://localhost:3000/)、[swagger](http://localhost:3000/swagger)、[swagger.json](http://localhost:3000/swagger/json)
 ```
 http://localhost:3000/
+```
+```
+http://localhost:3000/swagger
+```
+```
+http://localhost:3000/swagger/json
 ```
 

@@ -31,7 +31,7 @@ describe('# like requests', () => {
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})
         await db.User.create({account: 'User2', name: 'User2', email: 'User2', password: 'User2'})
-        await db.Tweet.create({UserId: 2, description: 'User2 的 Tweet1'})
+        await db.Tweet.create({userId: 2, description: 'User2 的 Tweet1'})
       })
 
       // POST /tweets/:id/like  喜歡一則推文
@@ -44,8 +44,8 @@ describe('# like requests', () => {
             if (err) return done(err);
             // 檢查 Like 資料裡，是否有 UserId=1, TweetId =1 的資料
             db.Like.findByPk(1).then(like => {
-              like.UserId.should.equal(1);
-              like.TweetId.should.equal(1);
+              like.userId.should.equal(1);
+              like.tweetId.should.equal(1);
               return done();
             })
           })
@@ -83,14 +83,14 @@ describe('# like requests', () => {
         // 在測試資料庫中，新增 mock 資料
         await db.User.create({account: 'User1', name: 'User1', email: 'User1', password: 'User1'})
         await db.User.create({account: 'User2', name: 'User2', email: 'User2', password: 'User2'})
-        await db.Tweet.create({UserId: 2, description: 'User2 的 Tweet1'})
-        await db.Like.create({UserId: 1, TweetId: 1})
+        await db.Tweet.create({userId: 2, description: 'User2 的 Tweet1'})
+        await db.Like.create({userId: 1, tweetId: 1})
       })
 
-      // POST /tweets/:id/unlike 取消喜歡
+      // DELETE /tweets/:id/unlike 取消喜歡
       it(' - successfully', (done) => {
         request(app)
-          .post('/api/tweets/1/unlike')
+          .delete('/api/tweets/1/unlike')
           .set('Accept', 'application/json')
           .expect(200)
           .end(function(err, res) {

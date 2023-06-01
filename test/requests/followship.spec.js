@@ -15,7 +15,7 @@ describe('# followship requests', () => {
 
   context('# POST ', () => {
 
-    describe(' /api/followships', () => {
+    describe(' /api/followships/:userId', () => {
       before(async() => {
         // 清除 User, Followship table 的測試資料庫資料
         await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, { raw: true });
@@ -35,11 +35,10 @@ describe('# followship requests', () => {
         await db.User.create({account: 'User2', name: 'User2', email: 'User2', password: 'User2'})
       })
 
-      // 新增 POST /followships
+      // 新增 POST /followships/:userId
       it(' - successfully', (done) => {
         request(app)
-          .post('/api/followships')
-          .send('id=2')
+          .post('/api/followships/2')
           .set('Accept', 'application/json')
           .expect(200)
           .end(function(err, res) {
